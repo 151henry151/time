@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-02-25
+
+### Changed
+
+- Reworked the core game loop so the moving now-line acts as a true **lockline** that freezes past slices and forces forward planning.
+- Made A-series/B-series mode and frame tilt gameplay-relevant through mandatory anchor requirements on higher levels.
+- Upgraded progression into a concept-driven sequence with substantially higher difficulty and denser constraint stacking.
+- Expanded the status panel with chronons, lockline progress, phase state, level concept text, and per-anchor schedule.
+- Refined visuals to communicate locked past slices, active/inactive hazards, relativistic anchors, and upcoming risk rows.
+
+### Added
+
+- New anchor system with absolute and relativistic anchors (drift + required tilt/view conditions).
+- Hazard rule system with static, phase-dependent, tilt-dependent, and constraint-enforcing paradox cells.
+- Chronon reserve penalties for paradox shocks and coherence breaks.
+- Multiple handcrafted difficulty blueprints (with extension scaling beyond the base sequence).
+- Expanded debug hooks for deterministic browser playability automation on advanced mechanics.
+
 ## [0.1.0] - 2026-02-25
 
 ### Added
@@ -20,5 +38,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Playability automation using Playwright to verify keyboard gameplay, level completion, and progression.
 - Project documentation (`README.md`) with run and test instructions.
 
-[unreleased]: https://github.com/151henry151/time/compare/v0.1.0...HEAD
+[unreleased]: https://github.com/151henry151/time/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/151henry151/time/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/151henry151/time/releases/tag/v0.1.0

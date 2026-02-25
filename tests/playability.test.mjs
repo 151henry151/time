@@ -56,30 +56,50 @@ async function main() {
 
     const initial = await page.evaluate(() => window.__eternalWeaveDebug.getState());
     assert(initial.level === 1, "Expected initial level to be 1");
-    assert(initial.evaluation !== null, "Expected initial evaluation to exist");
+    assert(initial.phase === "running", "Expected initial phase to be running");
+
+    // Freeze lockline while entering a path with real key input.
+    await page.evaluate(() => window.__eternalWeaveDebug.setNowSpeed(0));
 
     await page.keyboard.press("v");
     await page.keyboard.press("e");
     await page.keyboard.press("q");
+    const manipulated = await page.evaluate(() => window.__eternalWeaveDebug.getState());
+    assert(manipulated.viewMode === "B", "Expected V key to toggle to B mode");
+    assert(manipulated.frameSkew === 0, "Expected E then Q to net zero frame skew");
 
     await solveCurrentLevel(page);
+
+    // Let lockline process quickly and verify level completion.
+    await page.evaluate(() => window.__eternalWeaveDebug.setNowSpeed(12));
+    await page.waitForFunction(() => window.__eternalWeaveDebug.getState().phase === "won", { timeout: 12000 });
     const solved = await page.evaluate(() => window.__eternalWeaveDebug.getState());
-    assert(solved.evaluation?.stable, "Expected level to become stable after solving path");
+    assert(solved.phase === "won", "Expected level 1 to stabilize");
 
     await page.keyboard.press("Enter");
-    await page.waitForTimeout(120);
+    await page.waitForFunction(() => window.__eternalWeaveDebug.getState().level === 2, { timeout: 5000 });
     const advanced = await page.evaluate(() => window.__eternalWeaveDebug.getState());
     assert(advanced.level === 2, `Expected level to advance to 2, got ${advanced.level}`);
-    assert(advanced.score > 0, "Expected score to increase after advancing");
+
+    // Harder levels are solved through the in-game mechanics debugger to validate solvability.
+    await page.evaluate(() => window.__eternalWeaveDebug.autoSolveCurrentLevel());
+    await page.waitForFunction(() => window.__eternalWeaveDebug.getState().phase === "won", { timeout: 8000 });
+
+    await page.keyboard.press("Enter");
+    await page.waitForFunction(() => window.__eternalWeaveDebug.getState().level === 3, { timeout: 5000 });
+    const afterTwoLevels = await page.evaluate(() => window.__eternalWeaveDebug.getState());
+    assert(afterTwoLevels.level === 3, "Expected progression into level 3");
+    assert(afterTwoLevels.score > 0, "Expected score to increase after completing levels");
 
     console.log("Playability test passed.");
     console.log(
       JSON.stringify(
         {
           initialLevel: initial.level,
-          advancedLevel: advanced.level,
-          scoreAfterAdvance: advanced.score,
-          remainingTargetsOnNewLevel: advanced.targets.length,
+          reachedLevel: afterTwoLevels.level,
+          scoreAfterTwoCompletions: afterTwoLevels.score,
+          phaseAtEnd: afterTwoLevels.phase,
+          anchorsOnCurrentLevel: afterTwoLevels.totalAnchors,
         },
         null,
         2

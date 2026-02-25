@@ -28,26 +28,35 @@
           <div class="stat-grid">
             <div><span>Level</span><strong id="levelValue">1</strong></div>
             <div><span>Score</span><strong id="scoreValue">0</strong></div>
-            <div><span>Targets</span><strong id="targetsValue">0/0</strong></div>
-            <div><span>Paradoxes</span><strong id="paradoxValue">0</strong></div>
-            <div><span>Speed breaks</span><strong id="speedValue">0</strong></div>
+            <div><span>Chronons</span><strong id="chrononValue">0</strong></div>
+            <div><span>Lockline</span><strong id="lockValue">0/0</strong></div>
+            <div><span>Anchors</span><strong id="targetsValue">0/0</strong></div>
+            <div><span>Phase</span><strong id="phaseValue">Running</strong></div>
             <div><span>View</span><strong id="viewValue">A-series</strong></div>
             <div><span>Frame tilt</span><strong id="tiltValue">0</strong></div>
           </div>
 
           <p id="statusMessage" class="status">
-            Shape your worldline to touch every blue event while avoiding red paradox cells.
+            Shape future slices before the lockline passes them.
           </p>
+
+          <h2 id="levelTitle">Level concept</h2>
+          <p id="levelLore" class="lore">
+            Every time slice exists at once, but your observation frontier keeps freezing the past.
+          </p>
+
+          <h2>Anchor schedule</h2>
+          <ol id="anchorList" class="anchor-list"></ol>
 
           <h2>Controls</h2>
           <ul class="controls">
             <li><kbd>↑</kbd><kbd>↓</kbd> Move selected time slice</li>
-            <li><kbd>←</kbd><kbd>→</kbd> Move your position at that slice</li>
+            <li><kbd>←</kbd><kbd>→</kbd> Move your position at that slice (if not locked)</li>
             <li><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> Alternate movement keys</li>
-            <li><kbd>Q</kbd><kbd>E</kbd> Change frame tilt (relativity of simultaneity view)</li>
-            <li><kbd>V</kbd> Toggle A-series / B-series view</li>
+            <li><kbd>Q</kbd><kbd>E</kbd> Change frame tilt to satisfy relativistic anchors</li>
+            <li><kbd>V</kbd> Toggle A-series / B-series observational mode</li>
             <li><kbd>R</kbd> Reset worldline for this level</li>
-            <li><kbd>Enter</kbd> Advance when level is stable</li>
+            <li><kbd>Enter</kbd> Advance after temporal stabilization</li>
           </ul>
         </aside>
       </section>

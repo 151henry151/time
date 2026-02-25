@@ -109,6 +109,53 @@ canvas {
   color: #d6e8fd;
 }
 
+.lore {
+  margin: 0;
+  border-left: 3px solid #9c95ff;
+  background: #192f53;
+  border-radius: 8px;
+  padding: 8px 10px;
+  line-height: 1.36;
+  color: #d8e7ff;
+}
+
+.anchor-list {
+  margin: 0;
+  padding-left: 1.15rem;
+  display: grid;
+  gap: 6px;
+}
+
+.anchor-list li {
+  list-style: decimal;
+  font-size: 0.84rem;
+  line-height: 1.25;
+  color: #ddedff;
+}
+
+.anchor-list li.pending {
+  color: #dce9ff;
+}
+
+.anchor-list li.captured {
+  color: #9bf7c0;
+}
+
+.anchor-list li.missed {
+  color: #ff9ba7;
+}
+
+.chip {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  border: 1px solid #4f7097;
+  background: #1a3a5e;
+  font-size: 0.7rem;
+  vertical-align: baseline;
+}
+
 .controls {
   margin: 0;
   padding-left: 1rem;
