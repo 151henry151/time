@@ -145,6 +145,36 @@ canvas {
   color: #ff9ba7;
 }
 
+.anchor-list li.skipped {
+  color: #bcaab3;
+}
+
+.paradox-list {
+  margin: 0;
+  padding-left: 1.15rem;
+  display: grid;
+  gap: 6px;
+}
+
+.paradox-list li {
+  list-style: decimal;
+  font-size: 0.82rem;
+  line-height: 1.25;
+  color: #d6e7ff;
+}
+
+.paradox-list li.ok {
+  color: #9df3c2;
+}
+
+.paradox-list li.warning {
+  color: #ffd18a;
+}
+
+.paradox-list li.failed {
+  color: #ff95a2;
+}
+
 .chip {
   display: inline-block;
   margin-left: 4px;

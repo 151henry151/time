@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-02-25
+
+### Added
+
+- Full 3D spatial control model (`x`,`y`,`z`) across time slices, turning the player path into a true 4D worldtube puzzle.
+- Isometric spacetime visualization with per-slice geometry and explicit temporal rail indicators for now/lockline state.
+- Paradox ledger system with concept-driven contradiction checks:
+  - causal precedence constraints,
+  - bootstrap loop coherence constraints,
+  - grandfather-style self-negation constraints.
+- Optional paradox-switch anchors that can trigger contradiction states if combined with incompatible core identity anchors.
+
+### Changed
+
+- Replaced the earlier 2D lane mechanic with a substantially deeper 3D + time puzzle structure.
+- Reworked controls to separate spatial axes (`A/D`, `W/S`, `Q/E`) from frame tilt (`J/L`) and view mode (`V`).
+- Expanded progression/difficulty scaling with denser hazards, stronger frame dependence, and higher causal complexity.
+- Updated browser playability automation to validate the new dimensional controls and paradox-enabled progression.
+
+### Fixed
+
+- Fixed anchor fairness by preserving pre-lock stabilizations: anchors now remain captured once conditions are met before lock.
+
 ## [0.2.0] - 2026-02-25
 
 ### Changed
@@ -38,6 +61,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Playability automation using Playwright to verify keyboard gameplay, level completion, and progression.
 - Project documentation (`README.md`) with run and test instructions.
 
-[unreleased]: https://github.com/151henry151/time/compare/v0.2.0...HEAD
+[unreleased]: https://github.com/151henry151/time/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/151henry151/time/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/151henry151/time/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/151henry151/time/releases/tag/v0.1.0

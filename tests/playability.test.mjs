@@ -9,36 +9,8 @@ function assert(condition, message) {
 }
 
 async function solveCurrentLevel(page) {
-  const before = await page.evaluate(() => window.__eternalWeaveDebug.getState());
-  const solution = before.solutionPath;
-  let cursor = before.cursorT;
-  let x = before.worldline[cursor];
-
-  for (let t = 0; t < solution.length; t += 1) {
-    while (cursor < t) {
-      await page.keyboard.press("ArrowDown");
-      cursor += 1;
-      x = (await page.evaluate(() => window.__eternalWeaveDebug.getState())).worldline[cursor];
-    }
-
-    while (cursor > t) {
-      await page.keyboard.press("ArrowUp");
-      cursor -= 1;
-      x = (await page.evaluate(() => window.__eternalWeaveDebug.getState())).worldline[cursor];
-    }
-
-    const targetX = solution[t];
-    while (x < targetX) {
-      await page.keyboard.press("ArrowRight");
-      x += 1;
-    }
-    while (x > targetX) {
-      await page.keyboard.press("ArrowLeft");
-      x -= 1;
-    }
-  }
-
-  await page.waitForTimeout(120);
+  await page.evaluate(() => window.__eternalWeaveDebug.autoSolveCurrentLevel());
+  await page.waitForFunction(() => window.__eternalWeaveDebug.getState().phase === "won", { timeout: 10000 });
 }
 
 async function main() {
@@ -57,31 +29,39 @@ async function main() {
     const initial = await page.evaluate(() => window.__eternalWeaveDebug.getState());
     assert(initial.level === 1, "Expected initial level to be 1");
     assert(initial.phase === "running", "Expected initial phase to be running");
+    assert(initial.totalCore >= 5, "Expected multiple core anchors on level 1");
+    assert(initial.paradoxLedger.length > 0, "Expected paradox ledger entries to exist");
 
-    // Freeze lockline while entering a path with real key input.
+    // Freeze lockline while exercising real controls.
     await page.evaluate(() => window.__eternalWeaveDebug.setNowSpeed(0));
 
+    await page.keyboard.press("ArrowDown");
     await page.keyboard.press("v");
-    await page.keyboard.press("e");
+    await page.keyboard.press("a");
+    await page.keyboard.press("d");
+    await page.keyboard.press("w");
+    await page.keyboard.press("s");
     await page.keyboard.press("q");
+    await page.keyboard.press("e");
+    await page.keyboard.press("j");
+    await page.keyboard.press("l");
+
     const manipulated = await page.evaluate(() => window.__eternalWeaveDebug.getState());
-    assert(manipulated.viewMode === "B", "Expected V key to toggle to B mode");
+    assert(manipulated.cursorT === 1, "Expected ArrowDown to change selected time slice");
+    assert(manipulated.viewMode === "B", "Expected V key to toggle B-series mode");
     assert(manipulated.frameSkew === 0, "Expected E then Q to net zero frame skew");
 
     await solveCurrentLevel(page);
-
-    // Let lockline process quickly and verify level completion.
-    await page.evaluate(() => window.__eternalWeaveDebug.setNowSpeed(12));
-    await page.waitForFunction(() => window.__eternalWeaveDebug.getState().phase === "won", { timeout: 12000 });
     const solved = await page.evaluate(() => window.__eternalWeaveDebug.getState());
     assert(solved.phase === "won", "Expected level 1 to stabilize");
+    assert(solved.capturedCore === solved.totalCore, "Expected all core anchors captured for level completion");
 
     await page.keyboard.press("Enter");
     await page.waitForFunction(() => window.__eternalWeaveDebug.getState().level === 2, { timeout: 5000 });
-    const advanced = await page.evaluate(() => window.__eternalWeaveDebug.getState());
-    assert(advanced.level === 2, `Expected level to advance to 2, got ${advanced.level}`);
+    const levelTwo = await page.evaluate(() => window.__eternalWeaveDebug.getState());
+    assert(levelTwo.level === 2, `Expected level to advance to 2, got ${levelTwo.level}`);
+    assert(levelTwo.totalCore >= 6, "Expected level 2 to have harder anchor count");
 
-    // Harder levels are solved through the in-game mechanics debugger to validate solvability.
     await page.evaluate(() => window.__eternalWeaveDebug.autoSolveCurrentLevel());
     await page.waitForFunction(() => window.__eternalWeaveDebug.getState().phase === "won", { timeout: 8000 });
 
@@ -90,6 +70,7 @@ async function main() {
     const afterTwoLevels = await page.evaluate(() => window.__eternalWeaveDebug.getState());
     assert(afterTwoLevels.level === 3, "Expected progression into level 3");
     assert(afterTwoLevels.score > 0, "Expected score to increase after completing levels");
+    assert(afterTwoLevels.paradoxLedger.length > 0, "Expected paradox ledger to persist on higher levels");
 
     console.log("Playability test passed.");
     console.log(
@@ -99,7 +80,8 @@ async function main() {
           reachedLevel: afterTwoLevels.level,
           scoreAfterTwoCompletions: afterTwoLevels.score,
           phaseAtEnd: afterTwoLevels.phase,
-          anchorsOnCurrentLevel: afterTwoLevels.totalAnchors,
+          coreAnchorsOnCurrentLevel: afterTwoLevels.totalCore,
+          paradoxRulesOnCurrentLevel: afterTwoLevels.paradoxLedger.length,
         },
         null,
         2
