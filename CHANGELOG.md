@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-02-25
+
+### Added
+
+- Mouse drag camera orbit with full 360-degree yaw rotation and pitch control, enabling free inspection of the 3D spacetime representation from any angle.
+- Camera zoom via mouse wheel for depth control while planning worldtube edits.
+- Camera state debug hooks for automated browser testing and deterministic camera assertions.
+
+### Changed
+
+- Replaced fixed isometric projection with a camera-based 3D projection pipeline.
+- Updated rendering order (slices, anchors, hazards, worldtube segments) to depth-sort correctly under arbitrary camera angles.
+- Updated controls/UI/help text to explain orbit-camera interaction.
+- Expanded browser playability tests to verify that mouse dragging changes camera orientation.
+
 ## [0.3.0] - 2026-02-25
 
 ### Added
@@ -61,7 +76,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Playability automation using Playwright to verify keyboard gameplay, level completion, and progression.
 - Project documentation (`README.md`) with run and test instructions.
 
-[unreleased]: https://github.com/151henry151/time/compare/v0.3.0...HEAD
+[unreleased]: https://github.com/151henry151/time/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/151henry151/time/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/151henry151/time/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/151henry151/time/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/151henry151/time/releases/tag/v0.1.0

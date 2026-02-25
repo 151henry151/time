@@ -8,6 +8,11 @@ function assert(condition, message) {
   }
 }
 
+function circularDelta(a, b) {
+  const diff = Math.abs(a - b) % (Math.PI * 2);
+  return diff > Math.PI ? Math.PI * 2 - diff : diff;
+}
+
 async function solveCurrentLevel(page) {
   await page.evaluate(() => window.__eternalWeaveDebug.autoSolveCurrentLevel());
   await page.waitForFunction(() => window.__eternalWeaveDebug.getState().phase === "won", { timeout: 10000 });
@@ -50,6 +55,23 @@ async function main() {
     assert(manipulated.cursorT === 1, "Expected ArrowDown to change selected time slice");
     assert(manipulated.viewMode === "B", "Expected V key to toggle B-series mode");
     assert(manipulated.frameSkew === 0, "Expected E then Q to net zero frame skew");
+
+    const canvas = page.locator("#gameCanvas");
+    const box = await canvas.boundingBox();
+    assert(box !== null, "Expected canvas bounding box for drag test");
+
+    const dragStartX = box.x + box.width * 0.55;
+    const dragStartY = box.y + box.height * 0.5;
+    await page.mouse.move(dragStartX, dragStartY);
+    await page.mouse.down();
+    await page.mouse.move(dragStartX + 170, dragStartY - 90, { steps: 14 });
+    await page.mouse.up();
+
+    const afterDrag = await page.evaluate(() => window.__eternalWeaveDebug.getState());
+    const yawShift = circularDelta(manipulated.cameraYaw, afterDrag.cameraYaw);
+    const pitchShift = Math.abs(afterDrag.cameraPitch - manipulated.cameraPitch);
+    assert(yawShift > 0.1, `Expected camera yaw to change after drag, got ${yawShift}`);
+    assert(pitchShift > 0.04, `Expected camera pitch to change after drag, got ${pitchShift}`);
 
     await solveCurrentLevel(page);
     const solved = await page.evaluate(() => window.__eternalWeaveDebug.getState());

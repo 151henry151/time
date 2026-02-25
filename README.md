@@ -7,6 +7,7 @@ all moments are equally real, so you edit your entire worldline at once.
 
 - You control a **worldtube**: one 3D position `(x,y,z)` for each time slice `t`.
 - Time is the fourth axis: all slices exist at once, but a moving **now/lockline** freezes slices as it passes them.
+- You can **orbit the camera in 360°** by click-dragging the canvas to inspect the full 3D representation from any angle.
 - You can only edit slices that are still in the open future.
 - You stabilize **core anchors** (required events) while avoiding hazards and paradox switches.
 - A timeline collapses if lockline reaches unresolved core anchors, chronons are depleted, or paradox rules are violated.
@@ -39,6 +40,8 @@ Levels become progressively harder by combining:
 - `Q` / `E`: move Z coordinate in selected slice
 - `J` / `L`: change observer frame tilt
 - `V`: toggle A-series / B-series view
+- Mouse drag: orbit camera in 360° around the full scene
+- Mouse wheel: zoom camera distance in/out
 - `R`: reset worldline for current level
 - `Enter`: advance after timeline stabilization (or retry after collapse)
 

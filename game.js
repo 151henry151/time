@@ -29,14 +29,22 @@
       z: 4,
     },
     maxFrameTilt: 4,
-    iso: {
-      originX: 165,
-      originY: 530,
-      sliceDX: 34,
-      sliceDY: -19,
-      tileW: 24,
-      tileH: 12,
-      levelH: 18,
+    camera: {
+      screenX: 350,
+      screenY: 348,
+      focalLength: 700,
+      spaceScale: 56,
+      levelScale: 58,
+      timeVector: {
+        x: 30,
+        y: -46,
+        z: 26,
+      },
+      distance: {
+        min: 430,
+        max: 980,
+        initial: 640,
+      },
     },
     timeRail: {
       x: 790,
@@ -243,6 +251,16 @@
     currentPreview: null,
     anchorListCache: "",
     paradoxListCache: "",
+    cameraYaw: -0.85,
+    cameraPitch: 0.42,
+    cameraDistance: config.camera.distance.initial,
+  };
+
+  const pointerState = {
+    dragging: false,
+    pointerId: null,
+    lastX: 0,
+    lastY: 0,
   };
 
   function clamp(value, min, max) {
@@ -1340,12 +1358,60 @@
     }
   }
 
-  function project(pos, t) {
-    const iso = config.iso;
+  function toScenePoint(pos, t) {
+    const cx = (config.space.x - 1) / 2;
+    const cy = (config.space.y - 1) / 2;
+    const cz = (config.space.z - 1) / 2;
+    const ct = (config.timeSlices - 1) / 2;
+    const timeDelta = t - ct;
+
     return {
-      x: iso.originX + t * iso.sliceDX + (pos.x - pos.y) * iso.tileW,
-      y: iso.originY + t * iso.sliceDY + (pos.x + pos.y) * iso.tileH - pos.z * iso.levelH,
+      x: (pos.x - cx) * config.camera.spaceScale + timeDelta * config.camera.timeVector.x,
+      y: (pos.y - cy) * config.camera.spaceScale + timeDelta * config.camera.timeVector.y,
+      z: (pos.z - cz) * config.camera.levelScale + timeDelta * config.camera.timeVector.z,
     };
+  }
+
+  function project(pos, t) {
+    const scene = toScenePoint(pos, t);
+    const yaw = state.cameraYaw;
+    const pitch = state.cameraPitch;
+    const cosYaw = Math.cos(yaw);
+    const sinYaw = Math.sin(yaw);
+    const cosPitch = Math.cos(pitch);
+    const sinPitch = Math.sin(pitch);
+
+    // Orbit camera by rotating world around scene origin.
+    const xYaw = scene.x * cosYaw - scene.y * sinYaw;
+    const yYaw = scene.x * sinYaw + scene.y * cosYaw;
+    const zYaw = scene.z;
+
+    const yPitch = yYaw * cosPitch - zYaw * sinPitch;
+    const zPitch = yYaw * sinPitch + zYaw * cosPitch;
+
+    const rawDepth = yPitch + state.cameraDistance;
+    const depth = Math.max(45, rawDepth);
+    const scale = config.camera.focalLength / depth;
+
+    return {
+      x: config.camera.screenX + xYaw * scale,
+      y: config.camera.screenY - zPitch * scale,
+      depth,
+      rawDepth,
+      visible: rawDepth > 5,
+    };
+  }
+
+  function sliceDepthForSort(t) {
+    const center = project(
+      {
+        x: (config.space.x - 1) / 2,
+        y: (config.space.y - 1) / 2,
+        z: (config.space.z - 1) / 2,
+      },
+      t
+    );
+    return center.depth;
   }
 
   function drawTriangle(x, y, size) {
@@ -1408,13 +1474,15 @@
       ctx.fillStyle = "rgba(123, 162, 198, 0.1)";
     }
 
-    ctx.beginPath();
-    ctx.moveTo(p00.x, p00.y);
-    ctx.lineTo(p10.x, p10.y);
-    ctx.lineTo(p11.x, p11.y);
-    ctx.lineTo(p01.x, p01.y);
-    ctx.closePath();
-    ctx.fill();
+    if (p00.visible || p10.visible || p11.visible || p01.visible) {
+      ctx.beginPath();
+      ctx.moveTo(p00.x, p00.y);
+      ctx.lineTo(p10.x, p10.y);
+      ctx.lineTo(p11.x, p11.y);
+      ctx.lineTo(p01.x, p01.y);
+      ctx.closePath();
+      ctx.fill();
+    }
 
     ctx.strokeStyle = selected ? "rgba(255, 255, 255, 0.86)" : "rgba(127, 167, 205, 0.42)";
     ctx.lineWidth = selected ? 1.7 : 1;
@@ -1443,10 +1511,12 @@
 
     ctx.strokeStyle = "rgba(183, 214, 242, 0.6)";
     ctx.lineWidth = 1.2;
-    ctx.beginPath();
-    ctx.moveTo(p00.x, p00.y);
-    ctx.lineTo(pTop.x, pTop.y);
-    ctx.stroke();
+    if (p00.visible || pTop.visible) {
+      ctx.beginPath();
+      ctx.moveTo(p00.x, p00.y);
+      ctx.lineTo(pTop.x, pTop.y);
+      ctx.stroke();
+    }
 
     ctx.fillStyle = "rgba(216, 233, 255, 0.88)";
     ctx.font = "11px system-ui, sans-serif";
@@ -1455,17 +1525,29 @@
   }
 
   function drawSlices() {
-    for (let t = 0; t < config.timeSlices; t += 1) {
-      drawSliceFrame(t);
+    const order = Array.from({ length: config.timeSlices }, (_, t) => ({
+      t,
+      depth: sliceDepthForSort(t),
+    })).sort((a, b) => b.depth - a.depth);
+    for (const item of order) {
+      drawSliceFrame(item.t);
     }
   }
 
   function drawHazards(preview) {
-    for (const hazard of state.hazards) {
+    const orderedHazards = state.hazards
+      .map((hazard) => ({
+        hazard,
+        projected: project(hazard.pos, hazard.t),
+      }))
+      .sort((a, b) => b.projected.depth - a.projected.depth);
+
+    for (const entry of orderedHazards) {
+      const hazard = entry.hazard;
       if (!hazardVisible(hazard)) {
         continue;
       }
-      const p = project(hazard.pos, hazard.t);
+      const p = entry.projected;
       const active = hazardIsActive(hazard);
       const onTube = equalPos(state.worldtube[hazard.t], hazard.pos);
       const hot = active && onTube;
@@ -1516,9 +1598,21 @@
   }
 
   function drawAnchors(preview) {
-    for (const anchor of state.anchors) {
-      const expected = preview.expectedByAnchor.get(anchor.id);
-      const p = project(expected, anchor.t);
+    const ordered = state.anchors
+      .map((anchor) => {
+        const expected = preview.expectedByAnchor.get(anchor.id);
+        return {
+          anchor,
+          expected,
+          projected: project(expected, anchor.t),
+        };
+      })
+      .sort((a, b) => b.projected.depth - a.projected.depth);
+
+    for (const item of ordered) {
+      const anchor = item.anchor;
+      const expected = item.expected;
+      const p = item.projected;
       const ready = preview.readyAnchors.has(anchor.id);
 
       let fill = "#55d6ff";
@@ -1577,9 +1671,18 @@
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
 
+    const segmentOrder = [];
     for (let t = 0; t < config.timeSlices - 1; t += 1) {
       const a = project(state.worldtube[t], t);
       const b = project(state.worldtube[t + 1], t + 1);
+      segmentOrder.push({ t, a, b, depth: (a.depth + b.depth) / 2 });
+    }
+    segmentOrder.sort((left, right) => right.depth - left.depth);
+
+    for (const segment of segmentOrder) {
+      const t = segment.t;
+      const a = segment.a;
+      const b = segment.b;
       const locked = t <= state.lockedThrough;
       const speedBroken = preview.speedBreaks.has(t + 1);
       const accelBroken = preview.accelBreaks.has(t + 1);
@@ -1601,8 +1704,14 @@
       ctx.stroke();
     }
 
-    for (let t = 0; t < config.timeSlices; t += 1) {
-      const p = project(state.worldtube[t], t);
+    const pointOrder = Array.from({ length: config.timeSlices }, (_, t) => ({
+      t,
+      p: project(state.worldtube[t], t),
+    })).sort((left, right) => right.p.depth - left.p.depth);
+
+    for (const pointEntry of pointOrder) {
+      const t = pointEntry.t;
+      const p = pointEntry.p;
       const selected = t === state.cursorT;
       const locked = t <= state.lockedThrough;
       const speedBroken = preview.speedBreaks.has(t);
@@ -1711,10 +1820,12 @@
     ctx.stroke();
     ctx.fillStyle = "#dceeff";
     ctx.fillText("Worldtube", x + 18, y + 82);
+    ctx.fillStyle = "#bcd8f4";
+    ctx.fillText("Drag canvas: orbit camera", x, y + 96);
 
     if (preview.speedBreaks.size > 0 || preview.accelBreaks.size > 0) {
       ctx.fillStyle = "#ffbf8a";
-      ctx.fillText("Coherence warning active", x, y + 102);
+      ctx.fillText("Coherence warning active", x, y + 114);
     }
     ctx.restore();
   }
@@ -1737,7 +1848,7 @@
     ctx.font = "12px system-ui, sans-serif";
     ctx.fillText(`selected slice t=${state.cursorT}`, x + 10, y + 20);
     ctx.fillText(`x=${p.x}  y=${p.y}  z=${p.z}`, x + 10, y + 38);
-    ctx.fillText(`controls: A/D x, W/S y, Q/E z, J/L tilt, V view`, x + 10, y + 56);
+    ctx.fillText(`controls: A/D x, W/S y, Q/E z, J/L tilt, drag+wheel camera`, x + 10, y + 56);
     ctx.restore();
   }
 
@@ -1893,6 +2004,79 @@
     }
   }
 
+  function normalizeYaw(yaw) {
+    let out = yaw;
+    const full = Math.PI * 2;
+    while (out > Math.PI) {
+      out -= full;
+    }
+    while (out < -Math.PI) {
+      out += full;
+    }
+    return out;
+  }
+
+  function rotateCameraBy(deltaX, deltaY) {
+    state.cameraYaw = normalizeYaw(state.cameraYaw + deltaX * 0.0105);
+    state.cameraPitch = clamp(state.cameraPitch + deltaY * 0.0085, -1.32, 1.32);
+  }
+
+  function handlePointerDown(event) {
+    if (event.button !== 0 && event.pointerType !== "touch") {
+      return;
+    }
+    pointerState.dragging = true;
+    pointerState.pointerId = event.pointerId;
+    pointerState.lastX = event.clientX;
+    pointerState.lastY = event.clientY;
+    canvas.style.cursor = "grabbing";
+    if (canvas.setPointerCapture) {
+      canvas.setPointerCapture(event.pointerId);
+    }
+    event.preventDefault();
+  }
+
+  function handlePointerMove(event) {
+    if (!pointerState.dragging || event.pointerId !== pointerState.pointerId) {
+      return;
+    }
+    const dx = event.clientX - pointerState.lastX;
+    const dy = event.clientY - pointerState.lastY;
+    pointerState.lastX = event.clientX;
+    pointerState.lastY = event.clientY;
+    if (dx === 0 && dy === 0) {
+      return;
+    }
+    rotateCameraBy(dx, dy);
+    event.preventDefault();
+  }
+
+  function stopPointerDrag(event) {
+    if (!pointerState.dragging || event.pointerId !== pointerState.pointerId) {
+      return;
+    }
+    pointerState.dragging = false;
+    pointerState.pointerId = null;
+    canvas.style.cursor = "grab";
+    if (canvas.releasePointerCapture) {
+      try {
+        canvas.releasePointerCapture(event.pointerId);
+      } catch {
+        // Ignore release errors on some browser edge-cases.
+      }
+    }
+  }
+
+  function handleWheel(event) {
+    const zoomDelta = event.deltaY * 0.45;
+    state.cameraDistance = clamp(
+      state.cameraDistance + zoomDelta,
+      config.camera.distance.min,
+      config.camera.distance.max
+    );
+    event.preventDefault();
+  }
+
   let lastTimestamp = performance.now();
 
   function tick(timestamp) {
@@ -1941,6 +2125,9 @@
       lockline: state.lockedThrough,
       viewMode: state.viewMode,
       frameSkew: state.frameSkew,
+      cameraYaw: state.cameraYaw,
+      cameraPitch: state.cameraPitch,
+      cameraDistance: state.cameraDistance,
       cursorT: state.cursorT,
       nowPhase: state.nowPhase,
       nowSpeed: state.nowSpeed,
@@ -2049,10 +2236,35 @@
       processLockline();
       checkForWin();
     },
+    setCamera(camera) {
+      if (!camera || typeof camera !== "object") {
+        return;
+      }
+      if (Number.isFinite(camera.yaw)) {
+        state.cameraYaw = normalizeYaw(Number(camera.yaw));
+      }
+      if (Number.isFinite(camera.pitch)) {
+        state.cameraPitch = clamp(Number(camera.pitch), -1.32, 1.32);
+      }
+      if (Number.isFinite(camera.distance)) {
+        state.cameraDistance = clamp(
+          Number(camera.distance),
+          config.camera.distance.min,
+          config.camera.distance.max
+        );
+      }
+    },
     autoSolveCurrentLevel,
   };
 
+  canvas.style.cursor = "grab";
+  canvas.style.touchAction = "none";
   window.addEventListener("keydown", handleKeydown);
+  canvas.addEventListener("pointerdown", handlePointerDown);
+  canvas.addEventListener("pointermove", handlePointerMove);
+  canvas.addEventListener("pointerup", stopPointerDrag);
+  canvas.addEventListener("pointercancel", stopPointerDrag);
+  canvas.addEventListener("wheel", handleWheel, { passive: false });
   loadLevel(1);
   window.requestAnimationFrame(tick);
 })();
