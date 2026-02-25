@@ -1,6 +1,6 @@
 {
   "name": "eternal-weave",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "A simple browser game about eternalism and spacetime perspectives.",
   "main": "game.js",
   "scripts": {

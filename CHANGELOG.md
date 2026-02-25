@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-02-24
+
+### Added
+
+- High score table: when the game ends (phase collapsed), a dialog shows the top 10 high scores and a "Play again" button.
+- Scores from level 2 or higher can be recorded: on a new high score the player is prompted to enter their name; name and score are stored in the table (persisted in `localStorage`).
+
 ## [0.5.0] - 2026-02-25
 
 ### Added

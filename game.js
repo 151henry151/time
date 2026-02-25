@@ -255,7 +255,109 @@
     cameraYaw: -0.85,
     cameraPitch: 0.42,
     cameraDistance: config.camera.distance.initial,
+    gameEndDialogShown: false,
   };
+
+  const HIGH_SCORES_KEY = "eternalWeaveHighScores";
+  const HIGH_SCORES_MAX = 10;
+
+  function getHighScores() {
+    try {
+      const raw = localStorage.getItem(HIGH_SCORES_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function saveHighScores(entries) {
+    try {
+      localStorage.setItem(HIGH_SCORES_KEY, JSON.stringify(entries));
+    } catch {
+      // Ignore storage errors
+    }
+  }
+
+  function isHighScore(score) {
+    const list = getHighScores();
+    if (list.length < HIGH_SCORES_MAX) return true;
+    const lowest = list[list.length - 1];
+    return score > (lowest && lowest.score != null ? lowest.score : 0);
+  }
+
+  function addHighScore(name, score, level) {
+    const list = getHighScores();
+    const entry = { name: String(name).trim().slice(0, 24), score, level };
+    const next = [...list, entry].sort((a, b) => (b.score || 0) - (a.score || 0)).slice(0, HIGH_SCORES_MAX);
+    saveHighScores(next);
+    return next;
+  }
+
+  function showGameEndDialog() {
+    const level = state.level;
+    const score = state.totalScore;
+    const qualifiesForEntry = level >= 2 && isHighScore(score);
+    if (qualifiesForEntry) {
+      const name = prompt("New high score! Enter your name:");
+      if (name != null && String(name).trim()) {
+        addHighScore(name.trim(), score, level);
+      }
+    }
+
+    const overlay = document.createElement("div");
+    overlay.className = "high-score-overlay";
+    overlay.setAttribute("role", "dialog");
+    overlay.setAttribute("aria-label", "Game over – High scores");
+
+    const box = document.createElement("div");
+    box.className = "high-score-dialog";
+
+    const title = document.createElement("h2");
+    title.className = "high-score-dialog__title";
+    title.textContent = "Phase collapsed";
+    box.appendChild(title);
+
+    const tableWrap = document.createElement("div");
+    tableWrap.className = "high-score-dialog__table-wrap";
+    const table = document.createElement("table");
+    table.className = "high-score-table";
+    table.setAttribute("aria-label", "High scores");
+    let header = "<thead><tr><th>#</th><th>Name</th><th>Score</th><th>Level</th></tr></thead><tbody>";
+    const list = getHighScores();
+    if (list.length === 0) {
+      header += "<tr><td colspan=\"4\" class=\"high-score-empty\">No high scores yet</td></tr>";
+    } else {
+      list.forEach((entry, i) => {
+        header += `<tr><td>${i + 1}</td><td>${escapeHtml(entry.name || "—")}</td><td>${entry.score ?? 0}</td><td>${entry.level ?? 0}</td></tr>`;
+      });
+    }
+    table.innerHTML = header + "</tbody>";
+    tableWrap.appendChild(table);
+    box.appendChild(tableWrap);
+
+    const playAgain = document.createElement("button");
+    playAgain.type = "button";
+    playAgain.className = "high-score-dialog__play-again";
+    playAgain.textContent = "Play again";
+    playAgain.addEventListener("click", () => {
+      overlay.remove();
+      state.gameEndDialogShown = false;
+      state.totalScore = 0;
+      loadLevel(1);
+    });
+    box.appendChild(playAgain);
+
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement("div");
+    div.textContent = text;
+    return div.innerHTML;
+  }
 
   const pointerState = {
     dragging: false,
@@ -2240,6 +2342,12 @@
 
     state.currentPreview = computePreview();
     drawFrame(state.currentPreview);
+
+    if (state.levelStatus === "failed" && !state.gameEndDialogShown) {
+      state.gameEndDialogShown = true;
+      setTimeout(showGameEndDialog, 0);
+    }
+
     window.requestAnimationFrame(tick);
   }
 
