@@ -1,0 +1,31 @@
+{
+  "name": "eternal-weave",
+  "version": "0.1.0",
+  "description": "A simple browser game about eternalism and spacetime perspectives.",
+  "main": "game.js",
+  "scripts": {
+    "test": "node tests/playability.test.mjs",
+    "test:playability": "node tests/playability.test.mjs",
+    "start": "python3 -m http.server 8080"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/151henry151/time.git"
+  },
+  "keywords": [
+    "game",
+    "browser-game",
+    "eternalism",
+    "philosophy",
+    "spacetime"
+  ],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/151henry151/time/issues"
+  },
+  "homepage": "https://github.com/151henry151/time#readme",
+  "devDependencies": {
+    "playwright": "^1.58.2"
+  }
+}
