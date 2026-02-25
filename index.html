@@ -66,6 +66,39 @@
           </ul>
         </aside>
       </section>
+
+      <section class="mobile-controls" aria-label="Mobile game controls">
+        <div class="mobile-controls__column">
+          <h2>Slice</h2>
+          <div class="mobile-grid mobile-grid--slice">
+            <button type="button" class="mobile-btn" data-action="slicePrev">t - 1</button>
+            <button type="button" class="mobile-btn" data-action="sliceNext">t + 1</button>
+          </div>
+        </div>
+
+        <div class="mobile-controls__column">
+          <h2>Move (x y z)</h2>
+          <div class="mobile-grid">
+            <button type="button" class="mobile-btn" data-action="moveXNeg">x -</button>
+            <button type="button" class="mobile-btn" data-action="moveXPos">x +</button>
+            <button type="button" class="mobile-btn" data-action="moveYNeg">y -</button>
+            <button type="button" class="mobile-btn" data-action="moveYPos">y +</button>
+            <button type="button" class="mobile-btn" data-action="moveZNeg">z -</button>
+            <button type="button" class="mobile-btn" data-action="moveZPos">z +</button>
+          </div>
+        </div>
+
+        <div class="mobile-controls__column">
+          <h2>Frame / actions</h2>
+          <div class="mobile-grid">
+            <button type="button" class="mobile-btn" data-action="tiltNeg">tilt -</button>
+            <button type="button" class="mobile-btn" data-action="tiltPos">tilt +</button>
+            <button type="button" class="mobile-btn" data-action="toggleView">view</button>
+            <button type="button" class="mobile-btn" data-action="advance">enter</button>
+            <button type="button" class="mobile-btn mobile-btn--warn" data-action="reset">reset</button>
+          </div>
+        </div>
+      </section>
     </main>
 
     <script src="./game.js"></script>

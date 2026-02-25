@@ -20,6 +20,7 @@
     anchorList: document.getElementById("anchorList"),
     paradoxList: document.getElementById("paradoxList"),
   };
+  const mobileButtons = Array.from(document.querySelectorAll("[data-action]"));
 
   const config = {
     timeSlices: 12,
@@ -262,6 +263,20 @@
     lastX: 0,
     lastY: 0,
   };
+
+  const holdStateByPointer = new Map();
+  const repeatableActions = new Set([
+    "slicePrev",
+    "sliceNext",
+    "moveXNeg",
+    "moveXPos",
+    "moveYNeg",
+    "moveYPos",
+    "moveZNeg",
+    "moveZPos",
+    "tiltNeg",
+    "tiltPos",
+  ]);
 
   function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
@@ -1957,50 +1972,166 @@
     updateStatus(preview);
   }
 
+  function performAction(action) {
+    switch (action) {
+      case "slicePrev":
+        moveCursor(-1);
+        state.statusOverride = "";
+        return true;
+      case "sliceNext":
+        moveCursor(1);
+        state.statusOverride = "";
+        return true;
+      case "moveXNeg":
+        moveAxis("x", -1);
+        state.statusOverride = "";
+        return true;
+      case "moveXPos":
+        moveAxis("x", 1);
+        state.statusOverride = "";
+        return true;
+      case "moveYNeg":
+        moveAxis("y", -1);
+        state.statusOverride = "";
+        return true;
+      case "moveYPos":
+        moveAxis("y", 1);
+        state.statusOverride = "";
+        return true;
+      case "moveZNeg":
+        moveAxis("z", -1);
+        state.statusOverride = "";
+        return true;
+      case "moveZPos":
+        moveAxis("z", 1);
+        state.statusOverride = "";
+        return true;
+      case "tiltNeg":
+        state.frameSkew = clamp(state.frameSkew - 1, -config.maxFrameTilt, config.maxFrameTilt);
+        state.statusOverride = "";
+        return true;
+      case "tiltPos":
+        state.frameSkew = clamp(state.frameSkew + 1, -config.maxFrameTilt, config.maxFrameTilt);
+        state.statusOverride = "";
+        return true;
+      case "toggleView":
+        toggleViewMode();
+        state.statusOverride = "";
+        return true;
+      case "reset":
+        resetCurrentLevel();
+        return true;
+      case "advance":
+        advanceAfterPhaseEnd();
+        return true;
+      default:
+        return false;
+    }
+  }
+
   function handleKeydown(event) {
     const key = event.key.toLowerCase();
-    const prevent = key === "arrowup" || key === "arrowdown" || key === "enter";
-    if (prevent) {
+    const keyActionMap = {
+      arrowup: "slicePrev",
+      arrowdown: "sliceNext",
+      arrowleft: "moveXNeg",
+      arrowright: "moveXPos",
+      a: "moveXNeg",
+      d: "moveXPos",
+      w: "moveYNeg",
+      s: "moveYPos",
+      q: "moveZNeg",
+      e: "moveZPos",
+      j: "tiltNeg",
+      l: "tiltPos",
+      v: "toggleView",
+      r: "reset",
+      enter: "advance",
+    };
+
+    const action = keyActionMap[key];
+    if (action) {
       event.preventDefault();
+      performAction(action);
+    }
+  }
+
+  function stopMobileHold(pointerId) {
+    const hold = holdStateByPointer.get(pointerId);
+    if (!hold) {
+      return;
+    }
+    clearTimeout(hold.timeoutId);
+    if (hold.intervalId) {
+      clearInterval(hold.intervalId);
+    }
+    hold.button.classList.remove("mobile-btn--active");
+    holdStateByPointer.delete(pointerId);
+  }
+
+  function handleMobileButtonDown(event) {
+    const button = event.currentTarget;
+    const action = button.dataset.action;
+    if (!action) {
+      return;
     }
 
-    if (key === "arrowup") {
-      moveCursor(-1);
-      state.statusOverride = "";
-    } else if (key === "arrowdown") {
-      moveCursor(1);
-      state.statusOverride = "";
-    } else if (key === "a" || key === "arrowleft") {
-      moveAxis("x", -1);
-      state.statusOverride = "";
-    } else if (key === "d" || key === "arrowright") {
-      moveAxis("x", 1);
-      state.statusOverride = "";
-    } else if (key === "w") {
-      moveAxis("y", -1);
-      state.statusOverride = "";
-    } else if (key === "s") {
-      moveAxis("y", 1);
-      state.statusOverride = "";
-    } else if (key === "q") {
-      moveAxis("z", -1);
-      state.statusOverride = "";
-    } else if (key === "e") {
-      moveAxis("z", 1);
-      state.statusOverride = "";
-    } else if (key === "j") {
-      state.frameSkew = clamp(state.frameSkew - 1, -config.maxFrameTilt, config.maxFrameTilt);
-      state.statusOverride = "";
-    } else if (key === "l") {
-      state.frameSkew = clamp(state.frameSkew + 1, -config.maxFrameTilt, config.maxFrameTilt);
-      state.statusOverride = "";
-    } else if (key === "v") {
-      toggleViewMode();
-      state.statusOverride = "";
-    } else if (key === "r") {
-      resetCurrentLevel();
-    } else if (key === "enter") {
-      advanceAfterPhaseEnd();
+    event.preventDefault();
+    performAction(action);
+
+    if (button.setPointerCapture) {
+      button.setPointerCapture(event.pointerId);
+    }
+
+    button.classList.add("mobile-btn--active");
+    if (!repeatableActions.has(action)) {
+      holdStateByPointer.set(event.pointerId, {
+        button,
+        timeoutId: null,
+        intervalId: null,
+      });
+      return;
+    }
+
+    const holdData = {
+      button,
+      timeoutId: null,
+      intervalId: null,
+    };
+    holdData.timeoutId = setTimeout(() => {
+      const liveHold = holdStateByPointer.get(event.pointerId);
+      if (!liveHold) {
+        return;
+      }
+      liveHold.intervalId = setInterval(() => {
+        performAction(action);
+      }, 78);
+    }, 220);
+
+    holdStateByPointer.set(event.pointerId, holdData);
+  }
+
+  function handleMobileButtonUp(event) {
+    stopMobileHold(event.pointerId);
+  }
+
+  function bindMobileControls() {
+    for (const button of mobileButtons) {
+      button.addEventListener("pointerdown", handleMobileButtonDown);
+      button.addEventListener("pointerup", handleMobileButtonUp);
+      button.addEventListener("pointercancel", handleMobileButtonUp);
+      button.addEventListener("lostpointercapture", handleMobileButtonUp);
+      // Keyboard/assistive fallback (detail===0) without duplicating pointer taps.
+      button.addEventListener("click", (event) => {
+        if (event.detail !== 0) {
+          return;
+        }
+        event.preventDefault();
+        const action = button.dataset.action;
+        if (action) {
+          performAction(action);
+        }
+      });
     }
   }
 
@@ -2260,6 +2391,7 @@
   canvas.style.cursor = "grab";
   canvas.style.touchAction = "none";
   window.addEventListener("keydown", handleKeydown);
+  bindMobileControls();
   canvas.addEventListener("pointerdown", handlePointerDown);
   canvas.addEventListener("pointermove", handlePointerMove);
   canvas.addEventListener("pointerup", stopPointerDrag);

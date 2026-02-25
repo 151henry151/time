@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-02-25
+
+### Added
+
+- Dedicated mobile/touch control deck with large on-screen buttons for:
+  - time-slice navigation,
+  - x/y/z movement,
+  - frame tilt and view toggling,
+  - enter/reset actions.
+- Press-and-hold repeat behavior for movement/tilt controls to make touch play fluid on phones.
+- Mobile-emulation browser test coverage validating control visibility and touch interactions.
+
+### Changed
+
+- Unified input dispatch so keyboard and mobile controls trigger the exact same game actions.
+- Updated UI and documentation to describe mobile play and touch-first interaction flow.
+
 ## [0.4.0] - 2026-02-25
 
 ### Added
@@ -76,7 +93,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Playability automation using Playwright to verify keyboard gameplay, level completion, and progression.
 - Project documentation (`README.md`) with run and test instructions.
 
-[unreleased]: https://github.com/151henry151/time/compare/v0.4.0...HEAD
+[unreleased]: https://github.com/151henry151/time/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/151henry151/time/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/151henry151/time/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/151henry151/time/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/151henry151/time/compare/v0.1.0...v0.2.0

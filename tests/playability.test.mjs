@@ -18,6 +18,46 @@ async function solveCurrentLevel(page) {
   await page.waitForFunction(() => window.__eternalWeaveDebug.getState().phase === "won", { timeout: 10000 });
 }
 
+async function verifyMobileControls(browser, pageUrl) {
+  const context = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    isMobile: true,
+    hasTouch: true,
+  });
+  const page = await context.newPage();
+
+  try {
+    await page.goto(pageUrl);
+    await page.waitForFunction(() => typeof window.__eternalWeaveDebug?.getState === "function");
+
+    const mobileVisible = await page.evaluate(() => {
+      const controls = document.querySelector(".mobile-controls");
+      return controls ? window.getComputedStyle(controls).display !== "none" : false;
+    });
+    assert(mobileVisible, "Expected mobile controls to be visible in mobile emulation");
+
+    await page.evaluate(() => window.__eternalWeaveDebug.setNowSpeed(0));
+    const before = await page.evaluate(() => window.__eternalWeaveDebug.getState());
+
+    await page.locator('[data-action="sliceNext"]').click();
+    await page.locator('[data-action="moveXPos"]').click();
+    await page.locator('[data-action="moveYPos"]').click();
+    await page.locator('[data-action="moveZPos"]').click();
+    await page.locator('[data-action="tiltPos"]').click();
+    await page.locator('[data-action="toggleView"]').click();
+
+    const after = await page.evaluate(() => window.__eternalWeaveDebug.getState());
+    assert(after.cursorT === before.cursorT + 1, "Expected mobile slice button to advance selected time slice");
+    assert(after.worldtube[1].x === before.worldtube[1].x + 1, "Expected mobile x control to modify worldtube");
+    assert(after.worldtube[1].y === before.worldtube[1].y + 1, "Expected mobile y control to modify worldtube");
+    assert(after.worldtube[1].z === before.worldtube[1].z + 1, "Expected mobile z control to modify worldtube");
+    assert(after.frameSkew === before.frameSkew + 1, "Expected mobile tilt control to change frame skew");
+    assert(after.viewMode === "B", "Expected mobile view button to toggle to B-series");
+  } finally {
+    await context.close();
+  }
+}
+
 async function main() {
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(__filename);
@@ -28,6 +68,8 @@ async function main() {
   const page = await browser.newPage();
 
   try {
+    await verifyMobileControls(browser, pageUrl);
+
     await page.goto(pageUrl);
     await page.waitForFunction(() => typeof window.__eternalWeaveDebug?.getState === "function");
 

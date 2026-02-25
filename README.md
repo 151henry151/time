@@ -45,6 +45,17 @@ Levels become progressively harder by combining:
 - `R`: reset worldline for current level
 - `Enter`: advance after timeline stabilization (or retry after collapse)
 
+### Mobile controls
+
+On touch devices, an on-screen control deck appears automatically with:
+
+- slice controls (`t-1`, `t+1`),
+- direct axis controls (`x`, `y`, `z`),
+- frame controls (`tilt`, `view`),
+- action buttons (`enter`, `reset`).
+
+Buttons support press-and-hold repeat for fast movement.
+
 ## Run locally
 
 Open `index.html` directly in a browser, or run a static server:
@@ -61,9 +72,10 @@ Then open <http://localhost:8080>.
 This repository includes a headless browser test that:
 
 1. Opens the game in Chromium.
-2. Exercises live keyboard controls in the new 3D input model.
-3. Solves level 1 and verifies stabilization with paradox constraints active.
-4. Confirms progression into harder levels and score growth.
+2. Verifies mobile control visibility and touch interactions in mobile emulation.
+3. Exercises live keyboard controls in the 3D input model.
+4. Solves level 1 and verifies stabilization with paradox constraints active.
+5. Confirms progression into harder levels and score growth.
 
 Run:
 
