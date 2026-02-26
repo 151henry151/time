@@ -2135,9 +2135,13 @@
     }
   }
 
-  function handleKeydown(event) {
-    const key = event.key.toLowerCase();
-    const keyActionMap = {
+  function getKeyAction(event) {
+    const key = event.key;
+    const code = event.code;
+    const keyNorm = key.length === 1 ? (key === " " ? " " : key.toLowerCase()) : key.toLowerCase();
+    const codeNorm = code ? code.toLowerCase() : "";
+
+    const byKey = {
       f: "slicePrev",
       r: "sliceNext",
       arrowup: "slicePrev",
@@ -2155,10 +2159,34 @@
       enter: "advance",
       shift: "cycleCameraPreset",
     };
+    const byCode = {
+      keyf: "slicePrev",
+      keyr: "sliceNext",
+      keya: "moveXNeg",
+      keyd: "moveXPos",
+      keyw: "moveYNeg",
+      keys: "moveYPos",
+      keyq: "moveZNeg",
+      keye: "moveZPos",
+      keyz: "tiltNeg",
+      keyx: "tiltPos",
+      space: "toggleView",
+      backspace: "reset",
+      enter: "advance",
+      shiftleft: "cycleCameraPreset",
+      shiftright: "cycleCameraPreset",
+      arrowup: "slicePrev",
+      arrowdown: "sliceNext",
+    };
 
-    const action = keyActionMap[key];
+    return byKey[keyNorm] || byCode[codeNorm] || null;
+  }
+
+  function handleKeydown(event) {
+    const action = getKeyAction(event);
     if (action) {
       event.preventDefault();
+      event.stopPropagation();
       performAction(action);
     }
   }
