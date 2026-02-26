@@ -15,8 +15,8 @@ all moments are equally real, so you edit your entire worldline at once.
 ## Why the mechanics map to the concepts
 
 - **Eternalism / block universe**: every time slice is simultaneously present in the editor.
-- **A-series vs B-series**: `V` switches observational mode; some anchors/hazards are frame-dependent.
-- **Relativity of simultaneity**: observer tilt (`J`/`L`) shifts relativistic anchors and hazard activation.
+- **A-series vs B-series**: `Space` switches observational mode; some anchors/hazards are frame-dependent.
+- **Relativity of simultaneity**: observer tilt (`Z`/`X`) shifts relativistic anchors and hazard activation.
 - **Four-dimensionalism / perdurantism**: player identity is the full 4D worldtube, not a single instant.
 - **Proper acceleration / causal coherence**: abrupt 4D turns are penalized on harder levels.
 - **Paradoxes of time**: a ledger enforces causal precedence, bootstrap coherence, and grandfather-style contradictions.
@@ -34,15 +34,18 @@ Levels become progressively harder by combining:
 
 ## Controls
 
-- `↑` / `↓`: choose time slice
-- `A` / `D`: move X coordinate in selected slice
-- `W` / `S`: move Y coordinate in selected slice
-- `Q` / `E`: move Z coordinate in selected slice
-- `J` / `L`: change observer frame tilt
-- `V`: toggle A-series / B-series view
+All main keys are in the left-hand home area:
+
+- `F` / `R`: choose time slice (↑/↓ also work)
+- `W` / `S`: move Y in selected slice
+- `A` / `D`: move X in selected slice
+- `Q` / `E`: move Z in selected slice
+- `Z` / `X`: change observer frame tilt
+- `Space`: toggle A-series / B-series view
+- `Shift`: cycle camera angle (front / top / side / default)
 - Mouse drag: orbit camera in 360° around the full scene
-- Mouse wheel: zoom camera distance in/out
-- `R`: reset worldline for current level
+- Mouse wheel: zoom in/out
+- `Backspace`: reset worldline for current level
 - `Enter`: advance after timeline stabilization (or retry after collapse)
 
 ### Mobile controls

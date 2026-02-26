@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-02-24
+
+### Added
+
+- **Shift** cycles camera through preset angles (default, front, top, side) for quick alignment without mouse drag; mouse drag still provides free 360° orbit.
+
+### Changed
+
+- Keyboard controls consolidated to the left-hand home area:
+  - **F** / **R** for time slice (↑/↓ still work), **Backspace** for reset (was R).
+  - **Z** / **X** for frame tilt (was J/L), **Space** for A-series/B-series view (was V).
+- In-game controls list, canvas hint, and README updated to match the new scheme.
+
 ## [0.6.0] - 2026-02-24
 
 ### Added

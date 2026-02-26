@@ -83,20 +83,20 @@ async function main() {
     await page.evaluate(() => window.__eternalWeaveDebug.setNowSpeed(0));
 
     await page.keyboard.press("ArrowDown");
-    await page.keyboard.press("v");
+    await page.keyboard.press("Space");
     await page.keyboard.press("a");
     await page.keyboard.press("d");
     await page.keyboard.press("w");
     await page.keyboard.press("s");
     await page.keyboard.press("q");
     await page.keyboard.press("e");
-    await page.keyboard.press("j");
-    await page.keyboard.press("l");
+    await page.keyboard.press("z");
+    await page.keyboard.press("x");
 
     const manipulated = await page.evaluate(() => window.__eternalWeaveDebug.getState());
     assert(manipulated.cursorT === 1, "Expected ArrowDown to change selected time slice");
-    assert(manipulated.viewMode === "B", "Expected V key to toggle B-series mode");
-    assert(manipulated.frameSkew === 0, "Expected E then Q to net zero frame skew");
+    assert(manipulated.viewMode === "B", "Expected Space to toggle B-series mode");
+    assert(manipulated.frameSkew === 0, "Expected Z then X to net zero frame skew");
 
     const canvas = page.locator("#gameCanvas");
     const box = await canvas.boundingBox();

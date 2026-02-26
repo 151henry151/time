@@ -256,6 +256,7 @@
     cameraPitch: 0.42,
     cameraDistance: config.camera.distance.initial,
     gameEndDialogShown: false,
+    cameraPresetIndex: 0,
   };
 
   const HIGH_SCORES_KEY = "eternalWeaveHighScores";
@@ -1263,7 +1264,7 @@
       return;
     }
     state.levelStatus = "failed";
-    state.statusOverride = `${message} Press R to rewind this level.`;
+    state.statusOverride = `${message} Press Backspace to rewind this level.`;
   }
 
   function anchorReward(anchor) {
@@ -1965,7 +1966,7 @@
     ctx.font = "12px system-ui, sans-serif";
     ctx.fillText(`selected slice t=${state.cursorT}`, x + 10, y + 20);
     ctx.fillText(`x=${p.x}  y=${p.y}  z=${p.z}`, x + 10, y + 38);
-    ctx.fillText(`controls: A/D x, W/S y, Q/E z, J/L tilt, drag+wheel camera`, x + 10, y + 56);
+    ctx.fillText(`controls: F/R slice, W/S y, A/D x, Q/E z, Z/X tilt, Space view, Shift camera, drag+wheel orbit`, x + 10, y + 56);
     ctx.restore();
   }
 
@@ -2126,6 +2127,9 @@
       case "advance":
         advanceAfterPhaseEnd();
         return true;
+      case "cycleCameraPreset":
+        cycleCameraPreset();
+        return true;
       default:
         return false;
     }
@@ -2134,21 +2138,22 @@
   function handleKeydown(event) {
     const key = event.key.toLowerCase();
     const keyActionMap = {
+      f: "slicePrev",
+      r: "sliceNext",
       arrowup: "slicePrev",
       arrowdown: "sliceNext",
-      arrowleft: "moveXNeg",
-      arrowright: "moveXPos",
       a: "moveXNeg",
       d: "moveXPos",
       w: "moveYNeg",
       s: "moveYPos",
       q: "moveZNeg",
       e: "moveZPos",
-      j: "tiltNeg",
-      l: "tiltPos",
-      v: "toggleView",
-      r: "reset",
+      z: "tiltNeg",
+      x: "tiltPos",
+      " ": "toggleView",
+      backspace: "reset",
       enter: "advance",
+      shift: "cycleCameraPreset",
     };
 
     const action = keyActionMap[key];
@@ -2247,6 +2252,20 @@
       out += full;
     }
     return out;
+  }
+
+  const CAMERA_PRESETS = [
+    { name: "default", yaw: -0.85, pitch: 0.42 },
+    { name: "front", yaw: 0, pitch: 0.2 },
+    { name: "top", yaw: -0.85, pitch: -1.2 },
+    { name: "side", yaw: -Math.PI / 2 + 0.1, pitch: 0.2 },
+  ];
+
+  function cycleCameraPreset() {
+    state.cameraPresetIndex = (state.cameraPresetIndex + 1) % CAMERA_PRESETS.length;
+    const preset = CAMERA_PRESETS[state.cameraPresetIndex];
+    state.cameraYaw = normalizeYaw(preset.yaw);
+    state.cameraPitch = clamp(preset.pitch, -1.32, 1.32);
   }
 
   function rotateCameraBy(deltaX, deltaY) {
